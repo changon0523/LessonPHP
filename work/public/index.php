@@ -11,6 +11,8 @@ try {
     DB_PASS,
     [
       PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+      PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+      PDO::ATTR_EMULATE_PREPARES =>false,
     ]
     );
 } catch (PDOException $e){
@@ -18,6 +20,35 @@ try {
   exit;
 }
 
+function h($str)
+{
+  return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
+
+function addTodo($pdo)
+{
+  $title = trim(filter_input(INPUT_POST, 'title'));
+  if ($title === ''){
+    return;
+  }
+
+  $stmt = $pdo->prepare("INSERT INTO todos (title) VALUES (:title)");
+  $stmt->bindValue('title', $title, PDO::PARAM_STR);
+  $stmt->execute();
+
+}
+function getTodos($pdo)
+{
+  $stmt = $pdo->query("SELECT * FROM todos ORDER BY id DESC");
+  $todos = $stmt->fetchAll();
+  return $todos;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+  addTodo($pdo);
+}
+
+$todos = getTodos($pdo);
 ?>
 
 
@@ -31,19 +62,22 @@ try {
 <body>
   <h1>Todos</h1>
 
+  <form action="" method="post">
+    <input type="text" name="title" placeholder="Type new todo.">
+  </form>
+
   <ul>
+
+    <?php foreach($todos as $todo): ?>
+
     <li>
-      <input type="checkbox">
-      <span>Title</span>
+      <input type="checkbox" <?= $todo->is_done ? 'checked' : ''; ?>>
+      <span class="<?= $todo->id_done ? 'done' : ''; ?>">
+        <?= h($todo->title);?>
+      </span>
     </li>
-    <li>
-      <input type="checkbox" checked>
-      <span class="done">Title</span>
-    </li>
-    <li>
-      <input type="checkbox">
-      <span>Title</span>
-    </li>
+
+    <?php endforeach; ?>
   </ul>
 </body>
 </html>
