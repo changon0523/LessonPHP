@@ -1,21 +1,23 @@
 <?php
 
-define('DSN', 'mysql:host=db;dbname=myapp;charser=utf8mb4');
+define('DSN', 'mysql:host=db;dbname=myapp;charset=utf8mb4');
 define('DB_USER', 'myappuser');
 define('DB_PASS', 'myapppass');
+// define('SITE_URL', 'http://localhost:8562');
+define('SITE_URL', 'http://' . $_SERVER['HTTP_HOST']);
 
 try {
-  $pdo =new PDO(
+  $pdo = new PDO(
     DSN,
     DB_USER,
     DB_PASS,
     [
       PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
       PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
-      PDO::ATTR_EMULATE_PREPARES =>false,
+      PDO::ATTR_EMULATE_PREPARES => false,
     ]
-    );
-} catch (PDOException $e){
+  );
+} catch (PDOException $e) {
   echo $e->getMessage();
   exit;
 }
@@ -28,15 +30,15 @@ function h($str)
 function addTodo($pdo)
 {
   $title = trim(filter_input(INPUT_POST, 'title'));
-  if ($title === ''){
+  if ($title === '') {
     return;
   }
 
   $stmt = $pdo->prepare("INSERT INTO todos (title) VALUES (:title)");
   $stmt->bindValue('title', $title, PDO::PARAM_STR);
   $stmt->execute();
-
 }
+
 function getTodos($pdo)
 {
   $stmt = $pdo->query("SELECT * FROM todos ORDER BY id DESC");
@@ -44,14 +46,16 @@ function getTodos($pdo)
   return $todos;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST'){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   addTodo($pdo);
+
+  header('Location: ' . SITE_URL);
+  exit;
 }
 
 $todos = getTodos($pdo);
+
 ?>
-
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -67,16 +71,13 @@ $todos = getTodos($pdo);
   </form>
 
   <ul>
-
-    <?php foreach($todos as $todo): ?>
-
+    <?php foreach ($todos as $todo): ?>
     <li>
       <input type="checkbox" <?= $todo->is_done ? 'checked' : ''; ?>>
-      <span class="<?= $todo->id_done ? 'done' : ''; ?>">
-        <?= h($todo->title);?>
+      <span class="<?= $todo->is_done ? 'done' : ''; ?>">
+        <?= h($todo->title); ?>
       </span>
     </li>
-
     <?php endforeach; ?>
   </ul>
 </body>
