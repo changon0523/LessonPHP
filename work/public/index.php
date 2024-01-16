@@ -20,6 +20,23 @@ try {
   exit;
 }
 
+function h($str)
+{
+  return htmlspecialchars($str, ENT_QUOTES, "UTF-8");
+}
+
+function addTodo($pdo)
+{
+  $title = (filter_input(INPUT_POST, "title"));
+  if ($title === '') {
+    return ;
+  }
+
+  $stmt = $pdo->prepare("INSERT INTO todos (title) VALUES (:title)");
+  $stmt->bindValue('title', $title, PDO::PARAM_STR);
+  $stmt->execute();
+}
+
 function getTodos($pdo)
 {
   $stmt = $pdo->query("SELECT * FROM todos ORDER BY id DESC");
@@ -27,9 +44,11 @@ function getTodos($pdo)
   return $todos;
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  addTodo($pdo);
+}
+
 $todos = getTodos($pdo);
-var_dump($todos);
-exit;
 
 ?>
 <!DOCTYPE html>
@@ -41,20 +60,20 @@ exit;
 </head>
 <body>
   <h1>Todos</h1>
+<!-- todoを追加するためのフォーム -->
+  <form action="" method="post">
+    <input type="text" name="title" placeholder="Type new todo">
+  </form>
 
   <ul>
+    <?php foreach ($todos as $todo):?>
     <li>
-      <input type="checkbox">
-      <span>Title</span>
+      <input type="checkbox" <?= $todo->is_done ? 'checked' : '';?>>
+      <span class="<?= $todo->is_done ? 'checked' : '';?>">
+        <?= h($todo->title); ?>
+      </span>
     </li>
-    <li>
-      <input type="checkbox" checked>
-      <span class="done">Title</span>
-    </li>
-    <li>
-      <input type="checkbox">
-      <span>Title</span>
-    </li>
+    <?php endforeach; ?>
   </ul>
 </body>
 </html>
