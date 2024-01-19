@@ -17,9 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     case 'toggle':
        toggleTodo($pdo);
        break;
+    case 'delete':
+      deleteTodo($pdo);
+      break;
+    default:
+      exit;
   }
-
-  addTodo($pdo);
   // 再読み込みするとindex.phpがpostされてしまうので、postではない形式でアクセスする
   header('Location: ' . SITE_URL);
   exit;
@@ -55,10 +58,15 @@ $todos = getTodos($pdo);
       <span class="<?= $todo->is_done ? 'done' : ''; ?>">
         <?= h($todo->title); ?>
       </span>
+
+      <form action="?action=delete" method="post">
+        <span class="delete">x</span>
+        <input type="hidden" name="id" value="<?= h($todo->id); ?>">
+        <input type="hidden" name="token" value="<?= h($_SESSION['token']); ?>">
+      </form>
     </li>
     <?php endforeach; ?>
   </ul>
-
   <script src="js/main.js"></script>
 </body>
 </html>
