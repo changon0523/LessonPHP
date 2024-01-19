@@ -45,7 +45,7 @@ function getPdoInstance()
 
 function addTodo($pdo)
 {
-  $title = (filter_input(INPUT_POST, "title"));
+  $title = trim(filter_input(INPUT_POST, "title"));
   if ($title === '') {
     return ;
   }
@@ -53,6 +53,18 @@ function addTodo($pdo)
   $stmt = $pdo->prepare("INSERT INTO todos (title) VALUES (:title)");
   $stmt->bindValue('title', $title, PDO::PARAM_STR);
   $stmt->execute();
+}
+
+function toggleTodo($pdo)
+{
+    $id = filter_input(INPUT_POST, 'id');
+    if (empty($id)) {
+        return;
+    }
+
+    $stmt = $pdo->prepare("UPDATE todos SET is_done = NOT is_done WHERE id = :id");
+    $stmt->bindValue('id', $id, PDO::PARAM_INT);
+    $stmt->execute();
 }
 
 function getTodos($pdo)
